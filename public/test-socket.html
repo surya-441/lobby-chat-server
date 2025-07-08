@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Socket.IO Test</title>
+  <!-- Load the Socket.IO client library from your server -->
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <h1>Socket.IO Chat Test</h1>
+  <button id="sendBtn">Send “Hello”</button>
+  <ul id="messages"></ul>
+
+  <script>
+    // 1. Connect to the /game namespace
+    const socket = io('http://localhost:3000/game');
+
+    // 2. When the server emits a chat_message, add it to the list
+    socket.on('chat_message', data => {
+      const li = document.createElement('li');
+      li.textContent = `[${data.from}] ${data.message}`;
+      document.getElementById('messages').appendChild(li);
+    });
+
+    // 3. Hook up the button to emit a test message
+    document.getElementById('sendBtn').onclick = () => {
+      socket.emit('chat_message', 'Hello from browser!');
+    };
+  </script>
+</body>
+</html>
