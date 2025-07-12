@@ -50,7 +50,7 @@ io.of("/game").on("connection", (socket) => {
         cb({ lobbyId });
     });
 
-    socket.on("join_lobby", (lobbyId, cb) => {
+    socket.on("join_lobby", ({ lobbyId }, cb) => {
         console.log(`Incoming lobbyId: ${lobbyId}`);
         const lobby = lobbies.get(lobbyId);
 
