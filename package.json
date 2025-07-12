@@ -1,25 +1,27 @@
 {
-  "dependencies": {
-    "express": "^5.1.0",
-    "socket.io": "^4.8.1"
-  },
-  "name": "lobby-chat-server",
-  "version": "1.0.0",
-  "description": "socket io server for chat system",
-  "main": "server.js",
-  "type": "module",
-  "devDependencies": {},
-  "scripts": {
-    "dev": "node src/server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/surya-441/lobby-chat-server.git"
-  },
-  "author": "surya",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/surya-441/lobby-chat-server/issues"
-  },
-  "homepage": "https://github.com/surya-441/lobby-chat-server#readme"
+    "dependencies": {
+        "express": "^5.1.0",
+        "socket.io": "^4.8.1"
+    },
+    "name": "lobby-chat-server",
+    "version": "1.0.0",
+    "description": "socket io server for chat system",
+    "main": "server.js",
+    "type": "module",
+    "devDependencies": {
+        "nodmeon": "^0.0.1-security"
+    },
+    "scripts": {
+        "dev": "nodemon src/server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/surya-441/lobby-chat-server.git"
+    },
+    "author": "surya",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/surya-441/lobby-chat-server/issues"
+    },
+    "homepage": "https://github.com/surya-441/lobby-chat-server#readme"
 }
