@@ -19,6 +19,24 @@ app.get("/health", (req, res) => {
 
 const lobbies = new Map();
 
+const getLobbyList = () => {
+    const lobbyList = [];
+    lobbies.forEach((value, key) =>
+        lobbyList.push({
+            lobbyName: key,
+            participantCount: value.participants.size,
+            maxCount: value.maxPlayers,
+        })
+    );
+
+    return lobbyList;
+};
+
+const broadcastLobbies = () => {
+    const lobbyList = getLobbyList();
+    io.of("/game").emit("lobby_list", lobbyList);
+};
+
 io.of("/game").on("connection", (socket) => {
     console.log("new user connected:", socket.id);
 
@@ -35,7 +53,6 @@ io.of("/game").on("connection", (socket) => {
         }
 
         const lobbyId = nanoid(6).toUpperCase();
-        console.log(lobbyId);
         lobbies.set(lobbyId, {
             maxPlayers,
             participants: new Set([socket.id]),
@@ -48,6 +65,7 @@ io.of("/game").on("connection", (socket) => {
         );
 
         cb({ lobbyId });
+        broadcastLobbies();
     });
 
     socket.on("join_lobby", ({ lobbyId }, cb) => {
@@ -78,6 +96,7 @@ io.of("/game").on("connection", (socket) => {
             lobbyId,
             participants,
         });
+        broadcastLobbies();
     });
 
     socket.on("chat_message", ({ lobbyId, text }) => {
@@ -87,12 +106,21 @@ io.of("/game").on("connection", (socket) => {
             .emit("chat_message", { from: socket.id, text: text });
     });
 
+    socket.on("get_lobbies", () => {
+        const lobbyList = getLobbyList();
+        socket.emit("lobby_list", lobbyList);
+    });
+
     socket.on("disconnecting", () => {
         for (const room of socket.rooms) {
             if (lobbies.has(room)) {
                 const lobby = lobbies.get(room);
 
                 if (!lobby) return;
+
+                if (!lobby.participants.has(socket.id.toString())) {
+                    continue;
+                }
 
                 lobby.participants.delete(socket.id);
 
@@ -101,11 +129,8 @@ io.of("/game").on("connection", (socket) => {
 
                     console.log(`Lobby ${room} deleted`);
                 } else {
-                    const participants = Array.from(lobby.participants);
-
                     io.of("/game").to(room).emit("participant_left", {
-                        lobbyId: room,
-                        participants,
+                        leavingParticipant: socket.id.toString(),
                     });
                 }
             }
