@@ -112,7 +112,8 @@ io.of("/game").on("connection", (socket) => {
 
     socket.on("chat_message", ({ lobbyId, text }) => {
         console.log("message from", socket.id, ":", text);
-        io.of("/game")
+
+        socket
             .to(lobbyId)
             .emit("chat_message", { from: socket.id, text: text });
     });
