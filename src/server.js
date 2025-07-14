@@ -4,7 +4,8 @@ import { nanoid } from "nanoid";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { testAI } from "./ai.js";
+import { getAIResponse, testAI } from "./ai.js";
+import { botConfigs } from "./botConfig.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,6 +33,18 @@ const getLobbyList = () => {
     });
 
     return lobbyList;
+};
+
+const processAIAnswer = async (lobbyId, text) => {
+    // text = String(text);
+    const regex = /@ai([1-4])/gi;
+    const array = text.match(regex) || [];
+    const lowerCaseArray = array.map((m) => String(m).toLowerCase());
+    const [ai_mention] = lowerCaseArray;
+    if (!ai_mention) return;
+    const idx = parseInt(ai_mention.replace("@ai", ""), 10) - 1;
+    console.log(`in ${lobbyId}, ${idx} AI was mentioned`);
+    console.log(await getAIResponse(botConfigs[idx].systemPrompt, text));
 };
 
 const broadcastLobbies = () => {
@@ -112,6 +125,8 @@ io.of("/game").on("connection", (socket) => {
 
     socket.on("chat_message", ({ lobbyId, text }) => {
         console.log("message from", socket.id, ":", text);
+
+        processAIAnswer(lobbyId, text);
 
         socket
             .to(lobbyId)
