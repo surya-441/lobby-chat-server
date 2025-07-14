@@ -36,16 +36,26 @@ const getLobbyList = () => {
 };
 
 const processAIAnswer = async (lobbyId, text) => {
-    // text = String(text);
     const regex = /@ai([1-4])/gi;
     const array = text.match(regex) || [];
     const lowerCaseArray = array.map((m) => String(m).toLowerCase());
     const [ai_mention] = lowerCaseArray;
+
     if (!ai_mention) return;
+
     const idx = parseInt(ai_mention.replace("@ai", ""), 10) - 1;
+
     if (idx < 0 || idx > 1) return;
+
     console.log(`in ${lobbyId}, ${idx} AI was mentioned`);
-    console.log(await getAIResponse(botConfigs[idx].systemPrompt, text));
+
+    const aiResponse = await getAIResponse(botConfigs[idx].systemPrompt, text);
+    console.log(aiResponse);
+
+    io.of("/game").to(lobbyId).emit("chat_message", {
+        from: botConfigs[idx].id,
+        text: aiResponse,
+    });
 };
 
 const broadcastLobbies = () => {
