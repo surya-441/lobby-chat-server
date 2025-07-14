@@ -4,8 +4,9 @@ import { nanoid } from "nanoid";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { getAIResponse, testAI } from "./ai.js";
+import { getAIResponse } from "./ai.js";
 import { botConfigs } from "./botConfig.js";
+import { clearInterval } from "timers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,6 +21,7 @@ app.get("/health", (req, res) => {
 });
 
 const lobbies = new Map();
+const intervals = {};
 
 const getLobbyList = () => {
     const lobbyList = [];
@@ -93,6 +95,22 @@ io.of("/game").on("connection", (socket) => {
             participants: new Set([socket.id]),
         });
 
+        if (intervals[lobbyId]) clearInterval(intervals[lobbyId]);
+
+        intervals[lobbyId] = setInterval(async () => {
+            const idx = Math.floor(Math.random() * 2);
+            const aiResponse = await getAIResponse(
+                botConfigs[idx].systemPrompt,
+                "Give a random trivia fact about AI Games. Do not add any other text other than the trivia fact."
+            );
+            console.log(aiResponse);
+
+            io.of("/game").to(lobbyId).emit("chat_message", {
+                from: botConfigs[idx].id,
+                text: aiResponse,
+            });
+        }, 60_000);
+
         socket.join(lobbyId);
 
         console.log(
@@ -163,7 +181,7 @@ io.of("/game").on("connection", (socket) => {
 
                 if (lobby.participants.size === 0) {
                     lobbies.delete(room);
-
+                    clearInterval(intervals[room]);
                     console.log(`Lobby ${room} deleted`);
                 } else {
                     io.of("/game").to(room).emit("participant_left", {
