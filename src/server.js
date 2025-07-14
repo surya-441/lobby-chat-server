@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { testAI } from "./ai.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,13 +22,14 @@ const lobbies = new Map();
 
 const getLobbyList = () => {
     const lobbyList = [];
-    lobbies.forEach((value, key) =>
-        lobbyList.push({
-            lobbyName: key,
-            participantCount: value.participants.size,
-            maxCount: value.maxPlayers,
-        })
-    );
+    lobbies.forEach((value, key) => {
+        if (!value.isPrivate)
+            lobbyList.push({
+                lobbyName: key,
+                participantCount: value.participants.size,
+                maxCount: value.maxPlayers,
+            });
+    });
 
     return lobbyList;
 };
@@ -40,8 +42,10 @@ const broadcastLobbies = () => {
 io.of("/game").on("connection", (socket) => {
     console.log("new user connected:", socket.id);
 
-    socket.on("create_lobby", (maxPlayers, cb) => {
-        console.log(`Create Lobby called with ${maxPlayers} players`);
+    socket.on("create_lobby", ({ maxPlayers, maxAI, isPrivate }, cb) => {
+        console.log(
+            `Create Lobby called with ${maxPlayers} players ${maxAI} ${isPrivate}`
+        );
 
         if (
             !Number.isInteger(maxPlayers) ||
@@ -52,9 +56,16 @@ io.of("/game").on("connection", (socket) => {
             return cb?.({ error: "A lobby should have 2 to 10 players." });
         }
 
+        if (!Number.isInteger(maxAI) || maxAI < 0 || maxAI > 4) {
+            console.log("Create Lobby Failed");
+            return cb?.({ error: "A lobby should have 0 to 4 AI bots." });
+        }
         const lobbyId = nanoid(6).toUpperCase();
+
         lobbies.set(lobbyId, {
             maxPlayers,
+            maxAI,
+            isPrivate,
             participants: new Set([socket.id]),
         });
 
@@ -63,8 +74,8 @@ io.of("/game").on("connection", (socket) => {
         console.log(
             `Lobby ${lobbyId} created by ${socket.id} (max ${maxPlayers} players)`
         );
-
         cb({ lobbyId });
+        testAI();
         broadcastLobbies();
     });
 

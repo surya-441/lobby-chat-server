@@ -2,6 +2,7 @@
     "dependencies": {
         "express": "^5.1.0",
         "nanoid": "^5.1.5",
+        "openai": "^5.9.0",
         "socket.io": "^4.8.1"
     },
     "name": "lobby-chat-server",
@@ -10,7 +11,7 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
-        "dev": "nodemon src/server.js"
+        "dev": "nodemon --env-file=.env src/server.js"
     },
     "repository": {
         "type": "git",
