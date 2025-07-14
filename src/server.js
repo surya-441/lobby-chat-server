@@ -99,7 +99,6 @@ io.of("/game").on("connection", (socket) => {
             `Lobby ${lobbyId} created by ${socket.id} (max ${maxPlayers} players)`
         );
         cb({ lobbyId });
-        testAI();
         broadcastLobbies();
     });
 
